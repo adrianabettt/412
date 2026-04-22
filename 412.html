@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manipulando Registros</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde: #15803d; --verde-c: #22c55e; --verde-bg: #f0fdf4;
+  --azul: #1d4ed8; --azul-c: #3b82f6; --azul-bg: #eff6ff;
+  --amarelo: #b45309; --amarelo-c: #f59e0b; --amarelo-bg: #fffbeb;
+  --roxo: #7c3aed; --roxo-bg: #f5f3ff;
+  --vermelho: #dc2626; --cinza: #64748b;
+  --shadow: 0 4px 24px rgba(0,0,0,.10); --radius: 20px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Quicksand',sans-serif;background:#fafaf8;min-height:100vh;overflow-x:hidden;}
+
+/* TELAS */
+.tela{display:none;min-height:100vh;padding:24px 16px 48px;flex-direction:column;align-items:center;}
+.tela.ativa{display:flex;}
+
+/* HUD mini */
+.hud-mini{position:fixed;top:12px;right:14px;z-index:200;background:white;border-radius:40px;
+  box-shadow:0 4px 20px rgba(0,0,0,.14);padding:8px 16px;display:flex;align-items:center;gap:10px;
+  font-family:'Baloo 2',cursive;font-size:16px;font-weight:800;border:2px solid #fef3c7;}
+.hud-nota-val{font-size:20px;font-weight:800;min-width:42px;text-align:right;transition:color .3s;}
+.nota-baixa{color:var(--vermelho);}
+.nota-media{color:var(--amarelo);}
+.nota-alta{color:var(--verde);}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center;margin-bottom:28px;width:100%;max-width:560px;}
+.step-item{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+.step-item::after{content:'';position:absolute;top:18px;left:50%;width:100%;height:3px;background:#e2e8f0;z-index:0;}
+.step-item:last-child::after{display:none;}
+.step-dot{width:36px;height:36px;border-radius:50%;background:#e2e8f0;color:#94a3b8;
+  font-family:'Baloo 2',cursive;font-size:15px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;position:relative;z-index:1;
+  border:3px solid #e2e8f0;transition:all .3s;}
+.step-dot.done{background:var(--verde-c);color:white;border-color:var(--verde-c);}
+.step-dot.active{background:var(--amarelo);color:white;border-color:var(--amarelo);box-shadow:0 0 0 4px var(--amarelo-bg);}
+.step-label{font-size:10px;font-weight:700;color:#94a3b8;margin-top:4px;text-align:center;text-transform:uppercase;letter-spacing:.4px;}
+.step-dot.active + .step-label,.step-dot.done + .step-label{color:var(--cinza);}
+
+/* CABEÇALHO */
+.tela-header{text-align:center;margin-bottom:22px;width:100%;max-width:560px;}
+.tela-badge{display:inline-block;padding:4px 16px;border-radius:999px;font-size:11px;font-weight:700;
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;}
+.tela-header h1{font-family:'Baloo 2',cursive;font-size:clamp(22px,5vw,32px);line-height:1.2;margin-bottom:6px;}
+.tela-header p{font-size:14px;color:var(--cinza);line-height:1.6;}
+
+/* CARD */
+.card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;
+  width:100%;max-width:560px;margin-bottom:16px;}
+
+/* TABELA */
+.tb-wrap{overflow-x:auto;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin:10px 0;}
+.tb{width:100%;border-collapse:collapse;font-size:12px;}
+.tb thead th{background:var(--verde);color:white;padding:8px 10px;
+  font-family:'Baloo 2',cursive;font-size:11px;white-space:nowrap;}
+.tb thead th:first-child{border-radius:12px 0 0 0;}
+.tb thead th:last-child{border-radius:0 12px 0 0;}
+.tb tbody td{border-bottom:1px solid #f0fdf4;padding:7px 10px;vertical-align:middle;background:white;color:#1e293b;}
+.tb tbody tr:hover td{background:var(--verde-bg);}
+.pill{display:inline-block;background:var(--verde-bg);color:var(--verde);padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;}
+
+/* FILTROS */
+.filtros-area{background:var(--azul-bg);border:2px solid #bfdbfe;border-radius:14px;padding:12px;
+  display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.fg{display:flex;flex-direction:column;gap:3px;flex:1;min-width:110px;}
+.fg label{font-size:10px;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:.5px;}
+.fg select,.fg input{border:2px solid #bfdbfe;border-radius:10px;padding:6px 10px;
+  font-family:'Quicksand',sans-serif;font-size:12px;font-weight:600;outline:none;background:white;}
+
+/* EDIT PANEL */
+.edit-panel{background:var(--amarelo-bg);border:2px solid #fde68a;border-radius:14px;
+  padding:16px;margin-top:12px;display:none;}
+.edit-panel.open{display:block;animation:fadeIn .3s ease;}
+.edit-panel h3{font-family:'Baloo 2',cursive;color:var(--amarelo);font-size:15px;margin-bottom:12px;}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:480px){.edit-grid{grid-template-columns:1fr;}}
+.ec{display:flex;flex-direction:column;gap:3px;}
+.ec label{font-size:10px;font-weight:700;color:var(--amarelo);text-transform:uppercase;}
+.ec input,.ec select{border:2px solid #fde68a;border-radius:8px;padding:6px 10px;
+  font-family:'Quicksand',sans-serif;font-size:13px;font-weight:600;outline:none;background:white;}
+.ec input:focus,.ec select:focus{border-color:var(--amarelo-c);}
+
+/* MISSÃO PASSO A PASSO */
+.miss-passos{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.miss-passo{background:white;border:2px solid #e2e8f0;border-radius:12px;padding:12px 14px;
+  display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#374151;line-height:1.6;}
+.passo-num{background:var(--amarelo);color:white;border-radius:50%;width:26px;height:26px;min-width:26px;
+  display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-size:13px;font-weight:800;}
+.miss-card-sel{border-radius:14px;padding:14px;cursor:pointer;transition:all .2s;
+  border:3px solid transparent;text-align:center;}
+.miss-card-sel:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.1);}
+.miss-card-sel.selecionada{border-color:currentColor;box-shadow:0 0 0 3px rgba(0,0,0,.08);}
+.miss-card-sel.concluida{opacity:.7;cursor:default;}
+.miss-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+@media(max-width:480px){.miss-grid-3{grid-template-columns:1fr;}}
+
+/* RESPOSTA MISSÃO */
+.resp-miss-area{background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;padding:16px;}
+.resp-miss-area p{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:10px;line-height:1.5;}
+.resp-miss-area input{width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 14px;
+  font-family:'Quicksand',sans-serif;font-size:14px;font-weight:600;outline:none;background:white;}
+.resp-miss-area input:focus{border-color:var(--amarelo-c);}
+
+/* QUESTÕES */
+.questao-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;
+  width:100%;max-width:560px;margin-bottom:20px;border-top:5px solid var(--amarelo-c);animation:fadeIn .4s ease;}
+.questao-num{font-family:'Baloo 2',cursive;font-size:12px;font-weight:700;color:var(--amarelo);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.questao-texto{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:16px;line-height:1.5;}
+.ops{display:flex;flex-direction:column;gap:8px;}
+.op{background:var(--amarelo-bg);border:2px solid #fde68a;border-radius:12px;padding:11px 14px;
+  cursor:pointer;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:600;color:#78350f;
+  text-align:left;transition:all .2s;}
+.op:hover:not(:disabled){background:#fef3c7;border-color:var(--amarelo-c);transform:translateX(3px);}
+.op.certa{background:#d1fae5;border-color:#10b981;color:#065f46;cursor:default;}
+.op.errada{background:#fee2e2;border-color:#f87171;color:#991b1b;cursor:default;}
+.feedback{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;display:none;}
+.feedback.ok{background:#d1fae5;color:#065f46;display:block;}
+.feedback.nao{background:#fee2e2;color:#991b1b;display:block;}
+
+/* RESULTADO */
+.resultado-card{border-radius:28px;padding:36px 28px;text-align:center;width:100%;max-width:480px;color:white;
+  box-shadow:0 14px 50px rgba(0,0,0,.25);}
+.nota-grande{font-family:'Baloo 2',cursive;font-size:84px;line-height:1;font-weight:800;text-shadow:0 4px 20px rgba(0,0,0,.2);}
+.nota-label{font-family:'Baloo 2',cursive;font-size:22px;opacity:.9;margin:6px 0 4px;}
+.nota-msg{font-size:14px;opacity:.8;margin-bottom:24px;}
+.det-grid{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;}
+.det-it{background:rgba(255,255,255,.2);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;}
+.det-it span{display:block;font-size:22px;font-family:'Baloo 2',cursive;}
+
+/* BOTÕES */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 28px;border-radius:50px;
+  border:none;font-family:'Baloo 2',cursive;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15);}
+.btn:active{transform:translateY(0);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-verde{background:var(--verde-c);color:white;}
+.btn-amarelo{background:var(--amarelo);color:white;}
+.btn-azul{background:var(--azul-c);color:white;}
+.btn-roxo{background:var(--roxo);color:white;}
+.btn-branco{background:white;color:var(--amarelo);}
+.btn-cinza{background:#94a3b8;color:white;}
+.btn-sm{padding:8px 18px;font-size:13px;}
+.nav-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px;width:100%;max-width:560px;}
+
+/* INTRO */
+.intro-card{background:linear-gradient(135deg,#b45309,#f59e0b);color:white;border-radius:28px;
+  padding:32px 24px;text-align:center;box-shadow:0 10px 40px rgba(180,83,9,.35);width:100%;max-width:480px;}
+.intro-card h1{font-family:'Baloo 2',cursive;font-size:clamp(24px,6vw,38px);margin-bottom:10px;line-height:1.2;}
+.intro-card p{font-size:14px;color:rgba(255,255,255,.85);line-height:1.7;margin-bottom:18px;}
+.etapa-it{background:rgba(255,255,255,.18);border-radius:12px;padding:10px 14px;
+  font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px;text-align:left;margin-bottom:8px;}
+.etapa-pts{margin-left:auto;background:rgba(255,255,255,.25);border-radius:8px;padding:2px 8px;font-size:11px;white-space:nowrap;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#1e293b;color:white;padding:12px 22px;border-radius:40px;font-size:13px;font-weight:700;
+  box-shadow:0 6px 30px rgba(0,0,0,.2);z-index:999;transition:transform .3s ease;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* FLOAT PTS */
+.float-pts{position:fixed;pointer-events:none;font-family:'Baloo 2',cursive;font-size:22px;
+  font-weight:800;color:var(--amarelo);text-shadow:0 2px 8px rgba(0,0,0,.15);
+  animation:floatUp .9s ease forwards;z-index:9999;}
+
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+
+.missao-instrucoes{background:var(--azul-bg);border:2px solid #bfdbfe;border-radius:14px;padding:14px;margin-bottom:14px;}
+.missao-instrucoes p{font-size:13px;color:var(--azul);font-weight:600;margin-bottom:8px;}
+
+footer{text-align:center;color:#cbd5e1;font-size:11px;margin-top:32px;padding-bottom:16px;}
+</style>
+</head>
+<body>
+
+<div class="hud-mini">
+  🏅 <span id="hud-pts">0</span> pts
+  <span style="color:#e2e8f0;font-size:20px">|</span>
+  Nota: <span class="hud-nota-val nota-baixa" id="hud-nota">—</span>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- ═══ TELA 0 – INTRO ═══ -->
+<div class="tela ativa" id="tela-0">
+  <div style="height:60px"></div>
+  <div style="font-size:72px;text-align:center;margin-bottom:12px;">⚙️</div>
+  <div class="intro-card" style="animation:popIn .5s ease">
+    <h1>Manipulando Registros!</h1>
+    <p>Hoje você vai <strong>buscar, editar e ordenar</strong> registros num banco de dados de livros — como um verdadeiro programador!</p>
+    <div class="etapa-it"><span>🔍</span><div><div>Missão 1 – Busca</div><div style="font-size:11px;opacity:.8">Filtre por gênero e responda</div></div><span class="etapa-pts">5 pts</span></div>
+    <div class="etapa-it"><span>✏️</span><div><div>Missão 2 – Edição</div><div style="font-size:11px;opacity:.8">Edite um registro e responda</div></div><span class="etapa-pts">5 pts</span></div>
+    <div class="etapa-it"><span>🔤</span><div><div>Missão 3 – Ordenação</div><div style="font-size:11px;opacity:.8">Ordene a tabela e responda</div></div><span class="etapa-pts">5 pts</span></div>
+    <div class="etapa-it"><span>🤔</span><div><div>Questões</div><div style="font-size:11px;opacity:.8">3 perguntas de múltipla escolha</div></div><span class="etapa-pts">15 pts</span></div>
+    <button class="btn btn-branco" onclick="irPara(1)" style="margin-top:8px;">Começar! 🚀</button>
+  </div>
+  <footer>Material Pedagógico – Profª Adriana Bett Terebinto © 2026</footer>
+</div>
+
+<!-- ═══ TELA 1 – MISSÃO 1: BUSCA ═══ -->
+<div class="tela" id="tela-1" style="background:linear-gradient(180deg,var(--azul-bg) 0%,#fafaf8 100%)">
+  <div style="height:60px"></div>
+  <div class="stepper" id="stepper-1"></div>
+  <div class="tela-header">
+    <div class="tela-badge" style="background:#dbeafe;color:var(--azul);">Missão 1 de 3 · 5 pts</div>
+    <h1 style="color:var(--azul)">🔍 Missão 1 – Busca!</h1>
+    <p>Siga os passos abaixo, use os filtros e responda a pergunta para ganhar os pontos.</p>
+  </div>
+
+  <div class="card">
+    <div class="missao-instrucoes">
+      <p>📋 <strong>Siga estes passos:</strong></p>
+      <div class="miss-passos">
+        <div class="miss-passo"><div class="passo-num">1</div><div>Selecione <strong>"Fantasia"</strong> no filtro de Gênero abaixo e veja quais livros aparecem.</div></div>
+        <div class="miss-passo"><div class="passo-num">2</div><div>Conte quantos livros de Fantasia existem no banco.</div></div>
+        <div class="miss-passo"><div class="passo-num">3</div><div>Agora limpe o filtro e use o campo <strong>"Buscar título"</strong> para procurar <em>"Harry"</em>.</div></div>
+        <div class="miss-passo"><div class="passo-num">4</div><div>Pense: qual campo o computador verificou para filtrar por Fantasia?</div></div>
+      </div>
+    </div>
+
+    <div class="filtros-area">
+      <div class="fg"><label>🔍 Buscar título</label><input id="m1-bt" placeholder="Ex: Harry..." oninput="renderTb('m1')"></div>
+      <div class="fg"><label>🏷️ Gênero</label>
+        <select id="m1-bg" onchange="renderTb('m1')">
+          <option value="">Todos</option><option>Aventura</option><option>Fantasia</option>
+          <option>Ficção Científica</option><option>Romance</option><option>Terror</option>
+          <option>Humor</option><option>Histórico</option>
+        </select>
+      </div>
+      <div class="fg" style="flex:0;align-self:flex-end;">
+        <button class="btn btn-cinza btn-sm" onclick="limparFiltros('m1')">🧹 Limpar</button>
+      </div>
+    </div>
+
+    <div class="tb-wrap">
+      <table class="tb"><thead><tr><th>#</th><th>📖 Título</th><th>✍️ Autor</th><th>🏷️ Gênero</th><th>📃</th><th>⭐</th></tr></thead>
+      <tbody id="tb-m1"></tbody></table>
+    </div>
+
+    <div class="resp-miss-area" style="margin-top:16px;" id="area-m1">
+      <p>❓ Ao filtrar por Gênero = Fantasia, qual campo o computador verificou em cada registro?</p>
+      <input id="resp-m1" placeholder="Sua resposta..." id="resp-m1">
+      <button class="btn btn-azul btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="verificarMissao(1)">✅ Confirmar resposta (+5 pts)</button>
+      <div class="feedback" id="fb-m1"></div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-amarelo" id="btn-m1-next" onclick="irPara(2)" disabled>Ir para Missão 2 →</button>
+  </div>
+  <p style="font-size:12px;color:#94a3b8;margin-top:8px;" id="msg-m1">Responda a pergunta para continuar.</p>
+</div>
+
+<!-- ═══ TELA 2 – MISSÃO 2: EDIÇÃO ═══ -->
+<div class="tela" id="tela-2" style="background:linear-gradient(180deg,var(--amarelo-bg) 0%,#fafaf8 100%)">
+  <div style="height:60px"></div>
+  <div class="stepper" id="stepper-2"></div>
+  <div class="tela-header">
+    <div class="tela-badge" style="background:#fef3c7;color:var(--amarelo);">Missão 2 de 3 · 5 pts</div>
+    <h1 style="color:var(--amarelo)">✏️ Missão 2 – Edição!</h1>
+    <p>Edite um registro do banco de dados e responda a pergunta.</p>
+  </div>
+
+  <div class="card">
+    <div class="missao-instrucoes" style="background:var(--amarelo-bg);border-color:#fde68a;">
+      <p style="color:var(--amarelo)">📋 <strong>Siga estes passos:</strong></p>
+      <div class="miss-passos">
+        <div class="miss-passo"><div class="passo-num">1</div><div>Encontre <strong>"Capitão Cueca"</strong> na tabela abaixo.</div></div>
+        <div class="miss-passo"><div class="passo-num">2</div><div>Clique no botão <strong>✏️</strong> ao lado desse livro.</div></div>
+        <div class="miss-passo"><div class="passo-num">3</div><div>No painel que vai abrir, mude a <strong>nota de 3 para 5 estrelas</strong>.</div></div>
+        <div class="miss-passo"><div class="passo-num">4</div><div>Clique em <strong>Salvar</strong> e observe o que mudou na tabela.</div></div>
+      </div>
+    </div>
+
+    <div class="tb-wrap">
+      <table class="tb"><thead><tr><th>#</th><th>📖 Título</th><th>✍️ Autor</th><th>🏷️ Gênero</th><th>📃</th><th>⭐</th><th></th></tr></thead>
+      <tbody id="tb-m2"></tbody></table>
+    </div>
+
+    <div class="edit-panel" id="edit-panel">
+      <h3>✏️ Editando: <span id="ep-titulo"></span></h3>
+      <div class="edit-grid">
+        <div class="ec" style="grid-column:1/-1"><label>📖 Título</label><input id="ep-t"></div>
+        <div class="ec"><label>✍️ Autor</label><input id="ep-a"></div>
+        <div class="ec"><label>🏷️ Gênero</label>
+          <select id="ep-g"><option>Aventura</option><option>Fantasia</option><option>Ficção Científica</option><option>Romance</option><option>Terror</option><option>Humor</option><option>Histórico</option></select>
+        </div>
+        <div class="ec"><label>📃 Páginas</label><input id="ep-p" type="number" min="1"></div>
+        <div class="ec"><label>⭐ Nota</label>
+          <select id="ep-n">
+            <option value="1">⭐ (1)</option><option value="2">⭐⭐ (2)</option>
+            <option value="3">⭐⭐⭐ (3)</option><option value="4">⭐⭐⭐⭐ (4)</option>
+            <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-amarelo btn-sm" onclick="salvarEdit()">💾 Salvar</button>
+        <button class="btn btn-cinza btn-sm" onclick="cancelarEdit()">✖ Cancelar</button>
+      </div>
+    </div>
+
+    <div class="resp-miss-area" style="margin-top:16px;">
+      <p>❓ Ao editar só a nota, o que aconteceu com o Título e o Autor do livro?</p>
+      <input id="resp-m2" placeholder="Sua resposta...">
+      <button class="btn btn-amarelo btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="verificarMissao(2)">✅ Confirmar resposta (+5 pts)</button>
+      <div class="feedback" id="fb-m2"></div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-amarelo" id="btn-m2-next" onclick="irPara(3)" disabled>Ir para Missão 3 →</button>
+  </div>
+  <p style="font-size:12px;color:#94a3b8;margin-top:8px;" id="msg-m2">Responda a pergunta para continuar.</p>
+</div>
+
+<!-- ═══ TELA 3 – MISSÃO 3: ORDENAÇÃO ═══ -->
+<div class="tela" id="tela-3" style="background:linear-gradient(180deg,var(--verde-bg) 0%,#fafaf8 100%)">
+  <div style="height:60px"></div>
+  <div class="stepper" id="stepper-3"></div>
+  <div class="tela-header">
+    <div class="tela-badge" style="background:#d1fae5;color:var(--verde);">Missão 3 de 3 · 5 pts</div>
+    <h1 style="color:var(--verde)">🔤 Missão 3 – Ordenação!</h1>
+    <p>Use os botões de ordenação e responda a pergunta para ganhar os pontos.</p>
+  </div>
+
+  <div class="card">
+    <div class="missao-instrucoes" style="background:var(--verde-bg);border-color:#bbf7d0;">
+      <p style="color:var(--verde)">📋 <strong>Siga estes passos:</strong></p>
+      <div class="miss-passos">
+        <div class="miss-passo"><div class="passo-num" style="background:var(--verde)">1</div><div>Clique em <strong>"Título A→Z"</strong> e veja qual livro fica em primeiro.</div></div>
+        <div class="miss-passo"><div class="passo-num" style="background:var(--verde)">2</div><div>Agora clique em <strong>"Nota ↓"</strong> (maior nota primeiro) e observe a mudança.</div></div>
+        <div class="miss-passo"><div class="passo-num" style="background:var(--verde)">3</div><div>Experimente também <strong>"Páginas ↑"</strong> e veja o livro mais curto subir.</div></div>
+        <div class="miss-passo"><div class="passo-num" style="background:var(--verde)">4</div><div>Pense: qual ordenação mostraria os livros mais bem avaliados primeiro?</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-sm" onclick="ordenarM3('titulo')" id="ord-titulo" style="background:#e2e8f0;color:#374151;border:2px solid #e2e8f0;">Título A→Z</button>
+      <button class="btn btn-sm" onclick="ordenarM3('nota-d')" id="ord-nota-d" style="background:#e2e8f0;color:#374151;border:2px solid #e2e8f0;">Nota ↓</button>
+      <button class="btn btn-sm" onclick="ordenarM3('nota-a')" id="ord-nota-a" style="background:#e2e8f0;color:#374151;border:2px solid #e2e8f0;">Nota ↑</button>
+      <button class="btn btn-sm" onclick="ordenarM3('pag-a')" id="ord-pag-a" style="background:#e2e8f0;color:#374151;border:2px solid #e2e8f0;">Páginas ↑</button>
+      <button class="btn btn-sm" onclick="ordenarM3('pag-d')" id="ord-pag-d" style="background:#e2e8f0;color:#374151;border:2px solid #e2e8f0;">Páginas ↓</button>
+    </div>
+
+    <div class="tb-wrap">
+      <table class="tb"><thead><tr><th>#</th><th>📖 Título</th><th>✍️ Autor</th><th>🏷️ Gênero</th><th>📃</th><th>⭐</th></tr></thead>
+      <tbody id="tb-m3"></tbody></table>
+    </div>
+
+    <div class="resp-miss-area" style="margin-top:16px;">
+      <p>❓ Para encontrar o livro com <strong>maior nota</strong>, qual ordenação devemos usar?</p>
+      <input id="resp-m3" placeholder="Sua resposta...">
+      <button class="btn btn-verde btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="verificarMissao(3)">✅ Confirmar resposta (+5 pts)</button>
+      <div class="feedback" id="fb-m3"></div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-roxo" id="btn-m3-next" onclick="irPara(4)" disabled>Ir para as Questões →</button>
+  </div>
+  <p style="font-size:12px;color:#94a3b8;margin-top:8px;" id="msg-m3">Responda a pergunta para continuar.</p>
+</div>
+
+<!-- ═══ TELA 4 – QUESTÕES ═══ -->
+<div class="tela" id="tela-4" style="background:linear-gradient(180deg,var(--roxo-bg) 0%,#fafaf8 100%)">
+  <div style="height:60px"></div>
+  <div class="stepper" id="stepper-4"></div>
+  <div class="tela-header">
+    <div class="tela-badge" style="background:#ede9fe;color:var(--roxo);">Questões · até 15 pts</div>
+    <h1 style="color:var(--roxo)">🤔 Questões!</h1>
+    <p>São <strong>3 questões de 5 pts cada</strong>. Apenas <strong>1 tentativa</strong> — pense bem antes de responder!</p>
+  </div>
+
+  <div class="questao-card" style="border-top-color:#a78bfa">
+    <div class="questao-num" style="color:var(--roxo)">Questão 1 de 3 · 5 pts</div>
+    <div class="questao-texto">Quando buscamos "todos os livros de Fantasia", qual campo estamos usando?</div>
+    <div class="ops" id="ops-q1">
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q1',false)">A) O campo "Título".</button>
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q1',true)">B) O campo "Gênero".</button>
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q1',false)">C) A posição (linha, coluna).</button>
+    </div>
+    <div class="feedback" id="fb-q1"></div>
+  </div>
+
+  <div class="questao-card" style="border-top-color:#a78bfa">
+    <div class="questao-num" style="color:var(--roxo)">Questão 2 de 3 · 5 pts</div>
+    <div class="questao-texto">Ao editar apenas a nota de um livro, o que acontece com os outros campos?</div>
+    <div class="ops" id="ops-q2">
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q2',false)">A) Todos são apagados e precisam ser preenchidos novamente.</button>
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q2',true)">B) Ficam iguais — apenas o campo editado muda.</button>
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q2',false)">C) O registro inteiro é deletado.</button>
+    </div>
+    <div class="feedback" id="fb-q2"></div>
+  </div>
+
+  <div class="questao-card" style="border-top-color:#a78bfa">
+    <div class="questao-num" style="color:var(--roxo)">Questão 3 de 3 · 5 pts</div>
+    <div class="questao-texto">Por que o computador faz essas operações muito mais rápido que no papel?</div>
+    <div class="ops" id="ops-q3">
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q3',false)">A) Porque o computador tem uma tela grande.</button>
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q3',true)">B) Porque pode verificar milhões de registros por segundo, enquanto no papel olhamos um por um.</button>
+      <button class="op" style="background:var(--roxo-bg);border-color:#ddd6fe;color:#5b21b6" onclick="resp(this,'q3',false)">C) Porque fichas de papel são mais lentas de fabricar.</button>
+    </div>
+    <div class="feedback" id="fb-q3"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-roxo" id="btn-q-next" onclick="irPara(5)" disabled>Ver Resultado Final →</button>
+  </div>
+  <p style="font-size:12px;color:#94a3b8;margin-top:8px;" id="msg-q">Responda as 3 questões para ver o resultado.</p>
+</div>
+
+<!-- ═══ TELA 5 – RESULTADO ═══ -->
+<div class="tela" id="tela-5" style="background:linear-gradient(180deg,var(--roxo-bg) 0%,#fafaf8 100%)">
+  <div style="height:60px"></div>
+  <div class="resultado-card" id="resultado-card" style="animation:popIn .5s ease">
+    <div id="res-emoji" style="font-size:52px;margin-bottom:8px">🏆</div>
+    <div class="nota-grande" id="res-nota">0,0</div>
+    <div class="nota-label" id="res-label">Calculando...</div>
+    <div class="nota-msg" id="res-msg"></div>
+    <div class="det-grid">
+      <div class="det-it"><span id="det-miss">0</span>Missões /15</div>
+      <div class="det-it"><span id="det-quest">0</span>Questões /15</div>
+    </div>
+    <button class="btn btn-branco" onclick="irPara(0)">🔁 Recomeçar</button>
+  </div>
+  <footer style="margin-top:32px">Material Pedagógico – Profª Adriana Bett Terebinto © 2026</footer>
+</div>
+
+<script>
+/* ─── DADOS ─── */
+const PONTOS_MAX = 30;
+let pts = { missoes: 0, questoes: 0 };
+let editIdx = null;
+const resps = {};
+const missFeitas = new Set();
+let ordemM3 = 'titulo';
+
+let livros = [
+  {titulo:'O Pequeno Príncipe', autor:'A. de Saint-Exupéry', genero:'Romance',           paginas:96,  nota:5},
+  {titulo:'Harry Potter',        autor:'J.K. Rowling',        genero:'Fantasia',          paginas:264, nota:5},
+  {titulo:'Diário de um Banana', autor:'Jeff Kinney',          genero:'Humor',             paginas:224, nota:4},
+  {titulo:'O Hobbit',            autor:'J.R.R. Tolkien',       genero:'Fantasia',          paginas:310, nota:5},
+  {titulo:'Matilda',             autor:'Roald Dahl',           genero:'Aventura',          paginas:232, nota:4},
+  {titulo:'A Fábrica de Chocolate', autor:'Roald Dahl',        genero:'Humor',             paginas:180, nota:4},
+  {titulo:'Capitão Cueca',       autor:'Dav Pilkey',           genero:'Humor',             paginas:120, nota:3},
+  {titulo:'Percy Jackson',       autor:'Rick Riordan',         genero:'Fantasia',          paginas:377, nota:5},
+  {titulo:'Extraordinário',      autor:'R.J. Palacio',         genero:'Romance',           paginas:315, nota:5},
+  {titulo:'Anne Frank',          autor:'Anne Frank',           genero:'Histórico',         paginas:283, nota:4},
+];
+
+/* ─── NAVEGAÇÃO ─── */
+function irPara(n) {
+  document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+  document.getElementById('tela-' + n).classList.add('ativa');
+  window.scrollTo(0, 0);
+  atualizarSteppers(n);
+  if (n === 2) renderTb('m2');
+  if (n === 3) renderTb('m3');
+}
+
+/* ─── STEPPERS ─── */
+const stepLabels = ['Busca','Edição','Ordem','Questões'];
+function atualizarSteppers(tela) {
+  [1,2,3,4].forEach(s => {
+    const el = document.getElementById('stepper-' + s);
+    if (!el) return;
+    el.innerHTML = stepLabels.map((lbl, i) => {
+      const num = i + 1;
+      let cls = num < tela ? 'done' : num === tela ? 'active' : '';
+      return `<div class="step-item">
+        <div class="step-dot ${cls}">${num < tela ? '✓' : num}</div>
+        <div class="step-label">${lbl}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+/* ─── HUD ─── */
+function atualizarHUD(delta) {
+  if (delta > 0) mostrarFloat(delta);
+  const total = pts.missoes + pts.questoes;
+  document.getElementById('hud-pts').textContent = total.toFixed(1);
+  const nota = (total / PONTOS_MAX) * 10;
+  const el = document.getElementById('hud-nota');
+  el.textContent = nota > 0 ? nota.toFixed(1) : '—';
+  el.className = 'hud-nota-val ' + (nota < 5 ? 'nota-baixa' : nota < 7 ? 'nota-media' : 'nota-alta');
+}
+function mostrarFloat(delta) {
+  const el = document.createElement('div');
+  el.className = 'float-pts';
+  el.textContent = '+' + (Number.isInteger(delta) ? delta : delta.toFixed(1));
+  el.style.left = (30 + Math.random() * 50) + 'px';
+  el.style.top = '80px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ─── TABELA GENÉRICA ─── */
+const ords = {
+  'titulo': (a,b) => a.titulo.localeCompare(b.titulo),
+  'nota-d': (a,b) => b.nota - a.nota,
+  'nota-a': (a,b) => a.nota - b.nota,
+  'pag-d':  (a,b) => b.paginas - a.paginas,
+  'pag-a':  (a,b) => a.paginas - b.paginas,
+  'autor':  (a,b) => a.autor.localeCompare(b.autor),
+};
+
+function renderTb(modo, filtroTitulo = '', filtroGenero = '', ordem = 'titulo') {
+  let d = livros.map((l, i) => ({...l, idx: i}));
+  if (filtroTitulo) d = d.filter(l => l.titulo.toLowerCase().includes(filtroTitulo.toLowerCase()));
+  if (filtroGenero) d = d.filter(l => l.genero === filtroGenero);
+  if (ords[ordem]) d.sort(ords[ordem]);
+
+  const comBotaoEdit = modo === 'm2';
+  const tbody = document.getElementById('tb-' + modo);
+  if (!tbody) return;
+  tbody.innerHTML = d.map((l, i) => `
+    <tr ${editIdx === l.idx ? 'style="outline:2px dashed #f59e0b;outline-offset:-2px;"' : ''}>
+      <td style="color:#94a3b8;font-size:11px">${i+1}</td>
+      <td><strong>${l.titulo}</strong></td>
+      <td>${l.autor}</td>
+      <td><span class="pill">${l.genero}</span></td>
+      <td style="text-align:center">${l.paginas}</td>
+      <td>${'⭐'.repeat(l.nota) + '☆'.repeat(5-l.nota)}</td>
+      ${comBotaoEdit ? `<td><button onclick="abrirEdit(${l.idx})" style="background:var(--amarelo);color:white;border:none;border-radius:8px;padding:4px 10px;font-family:'Baloo 2',cursive;font-size:12px;cursor:pointer;">✏️</button></td>` : ''}
+    </tr>
+  `).join('');
+}
+
+/* ─── MISSÃO 1: BUSCA (filtros) ─── */
+function renderTb1() {
+  const bt = document.getElementById('m1-bt')?.value || '';
+  const bg = document.getElementById('m1-bg')?.value || '';
+  renderTb('m1', bt, bg, 'titulo');
+}
+function limparFiltros(modo) {
+  if (modo === 'm1') {
+    document.getElementById('m1-bt').value = '';
+    document.getElementById('m1-bg').value = '';
+  }
+  renderTb(modo);
+}
+// override oninput/onchange para m1
+document.addEventListener('DOMContentLoaded', () => {
+  const bt = document.getElementById('m1-bt');
+  const bg = document.getElementById('m1-bg');
+  if (bt) bt.addEventListener('input', renderTb1);
+  if (bg) bg.addEventListener('change', renderTb1);
+  renderTb('m1');
+  renderTb('m2');
+  renderTb('m3');
+});
+
+/* ─── MISSÃO 2: EDIÇÃO ─── */
+function abrirEdit(i) {
+  editIdx = i;
+  const l = livros[i];
+  document.getElementById('ep-titulo').textContent = l.titulo;
+  document.getElementById('ep-t').value = l.titulo;
+  document.getElementById('ep-a').value = l.autor;
+  document.getElementById('ep-g').value = l.genero;
+  document.getElementById('ep-p').value = l.paginas;
+  document.getElementById('ep-n').value = l.nota;
+  document.getElementById('edit-panel').classList.add('open');
+  renderTb('m2');
+}
+function salvarEdit() {
+  if (editIdx === null) return;
+  livros[editIdx] = {
+    titulo: document.getElementById('ep-t').value.trim() || livros[editIdx].titulo,
+    autor:  document.getElementById('ep-a').value.trim() || livros[editIdx].autor,
+    genero: document.getElementById('ep-g').value,
+    paginas: parseInt(document.getElementById('ep-p').value) || livros[editIdx].paginas,
+    nota: parseInt(document.getElementById('ep-n').value),
+  };
+  cancelarEdit();
+  toast('✅ Registro salvo!');
+}
+function cancelarEdit() {
+  editIdx = null;
+  document.getElementById('edit-panel').classList.remove('open');
+  renderTb('m2');
+}
+
+/* ─── MISSÃO 3: ORDENAÇÃO ─── */
+function ordenarM3(ord) {
+  ordemM3 = ord;
+  // highlight botão ativo
+  document.querySelectorAll('[id^="ord-"]').forEach(b => {
+    b.style.background = '#e2e8f0';
+    b.style.color = '#374151';
+    b.style.borderColor = '#e2e8f0';
+  });
+  const btn = document.getElementById('ord-' + ord);
+  if (btn) { btn.style.background = 'var(--verde)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--verde)'; }
+  renderTb('m3', '', '', ord);
+}
+
+/* ─── VERIFICAR MISSÃO ─── */
+const missConfig = {
+  1: { correta: 'gênero', hint: 'Pense: você usou o filtro de _____ para buscar.' },
+  2: { correta: 'iguais',  hint: 'Editar um campo não apaga os outros — eles ficam _____.' },
+  3: { correta: 'nota',    hint: 'Para ver os mais bem avaliados primeiro, ordene por _____.' },
+};
+function verificarMissao(n) {
+  if (missFeitas.has(n)) return;
+  const val = document.getElementById('resp-m' + n)?.value.trim().toLowerCase() || '';
+  const cfg = missConfig[n];
+  const fb = document.getElementById('fb-m' + n);
+  if (val.includes(cfg.correta) || val.length > 3) {
+    fb.className = 'feedback ok';
+    fb.textContent = `✅ Correto! +5 pontos!`;
+    document.getElementById('resp-m' + n).disabled = true;
+    missFeitas.add(n);
+    pts.missoes += 5;
+    atualizarHUD(5);
+    // habilitar próximo
+    const nextBtns = { 1: 'btn-m1-next', 2: 'btn-m2-next', 3: 'btn-m3-next' };
+    const msgIds   = { 1: 'msg-m1', 2: 'msg-m2', 3: 'msg-m3' };
+    document.getElementById(nextBtns[n]).disabled = false;
+    document.getElementById(msgIds[n]).style.opacity = '0';
+  } else {
+    fb.className = 'feedback nao';
+    fb.textContent = `❌ Tente novamente! Dica: ${cfg.hint}`;
+  }
+}
+
+/* ─── QUESTÕES ─── */
+function resp(btn, q, certa) {
+  if (resps[q]) return;
+  resps[q] = true;
+  document.getElementById('ops-' + q).querySelectorAll('.op').forEach(b => b.disabled = true);
+  btn.classList.add(certa ? 'certa' : 'errada');
+  const fb = document.getElementById('fb-' + q);
+  if (certa) {
+    fb.className = 'feedback ok';
+    fb.textContent = '✅ Correto! +5 pontos!';
+    pts.questoes += 5;
+    atualizarHUD(5);
+  } else {
+    fb.className = 'feedback nao';
+    fb.textContent = '❌ Incorreto. A resposta certa está em verde!';
+    document.getElementById('ops-' + q).querySelectorAll('.op').forEach(b => {
+      if (!b.classList.contains('errada')) b.classList.add('certa');
+    });
+    atualizarHUD(0);
+  }
+  if (resps['q1'] && resps['q2'] && resps['q3']) {
+    setTimeout(() => {
+      document.getElementById('btn-q-next').disabled = false;
+      document.getElementById('msg-q').style.opacity = '0';
+    }, 500);
+  }
+}
+
+/* ─── RESULTADO ─── */
+function mostrarResultado() {
+  const total = pts.missoes + pts.questoes;
+  const nota = (total / PONTOS_MAX) * 10;
+  document.getElementById('res-nota').textContent = nota.toFixed(1);
+  document.getElementById('det-miss').textContent = pts.missoes;
+  document.getElementById('det-quest').textContent = pts.questoes;
+  let emoji, lbl, msg, bg;
+  if (nota >= 9)      { emoji='🏆'; lbl='Excelente!';  msg='Mestre em manipular registros!';    bg='linear-gradient(135deg,#15803d,#22c55e)'; }
+  else if (nota >= 7) { emoji='😊'; lbl='Muito Bom!';  msg='Ótimo trabalho com as operações!'; bg='linear-gradient(135deg,#b45309,#f59e0b)'; }
+  else if (nota >= 5) { emoji='🙂'; lbl='Bom!';        msg='Você passou! Continue praticando.'; bg='linear-gradient(135deg,#0369a1,#38bdf8)'; }
+  else                { emoji='😅'; lbl='Continue!';   msg='Revise e tente de novo!';           bg='linear-gradient(135deg,#dc2626,#f87171)'; }
+  document.getElementById('res-emoji').textContent = emoji;
+  document.getElementById('res-label').textContent = lbl;
+  document.getElementById('res-msg').textContent = msg;
+  document.getElementById('resultado-card').style.background = bg;
+}
+
+// override irPara para disparar mostrarResultado
+const _irPara = irPara;
+window.irPara = function(n) {
+  _irPara(n);
+  if (n === 5) mostrarResultado();
+};
+</script>
+</body>
+</html>
