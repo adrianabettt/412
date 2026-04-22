@@ -31,7 +31,7 @@ body{font-family:'Quicksand',sans-serif;background:#fafaf8;min-height:100vh;over
 .nota-alta{color:var(--verde);}
 
 /* STEPPER */
-.stepper{display:flex;align-items:center;margin-bottom:28px;width:100%;max-width:560px;}
+.stepper{display:flex;align-items:center;margin-bottom:28px;width:100%;max-width:900px;}
 .step-item{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
 .step-item::after{content:'';position:absolute;top:18px;left:50%;width:100%;height:3px;background:#e2e8f0;z-index:0;}
 .step-item:last-child::after{display:none;}
@@ -45,7 +45,7 @@ body{font-family:'Quicksand',sans-serif;background:#fafaf8;min-height:100vh;over
 .step-dot.active + .step-label,.step-dot.done + .step-label{color:var(--cinza);}
 
 /* CABEÇALHO */
-.tela-header{text-align:center;margin-bottom:22px;width:100%;max-width:560px;}
+.tela-header{text-align:center;margin-bottom:22px;width:100%;max-width:900px;}
 .tela-badge{display:inline-block;padding:4px 16px;border-radius:999px;font-size:11px;font-weight:700;
   letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;}
 .tela-header h1{font-family:'Baloo 2',cursive;font-size:clamp(22px,5vw,32px);line-height:1.2;margin-bottom:6px;}
@@ -53,7 +53,7 @@ body{font-family:'Quicksand',sans-serif;background:#fafaf8;min-height:100vh;over
 
 /* CARD */
 .card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;
-  width:100%;max-width:560px;margin-bottom:16px;}
+  width:100%;max-width:900px;margin-bottom:16px;}
 
 /* TABELA */
 .tb-wrap{overflow-x:auto;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin:10px 0;}
@@ -88,11 +88,13 @@ body{font-family:'Quicksand',sans-serif;background:#fafaf8;min-height:100vh;over
 .ec input:focus,.ec select:focus{border-color:var(--amarelo-c);}
 
 /* MISSÃO PASSO A PASSO */
-.miss-passos{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-.miss-passo{background:white;border:2px solid #e2e8f0;border-radius:12px;padding:12px 14px;
-  display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#374151;line-height:1.6;}
-.passo-num{background:var(--amarelo);color:white;border-radius:50%;width:26px;height:26px;min-width:26px;
-  display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-size:13px;font-weight:800;}
+.miss-passos{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+@media(max-width:700px){.miss-passos{grid-template-columns:1fr 1fr;}}
+@media(max-width:400px){.miss-passos{grid-template-columns:1fr;}}
+.miss-passo{background:white;border:2px solid #e2e8f0;border-radius:14px;padding:14px;
+  display:flex;flex-direction:column;gap:8px;font-size:13px;color:#374151;line-height:1.6;}
+.passo-num{background:var(--amarelo);color:white;border-radius:50%;width:28px;height:28px;min-width:28px;
+  display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-size:14px;font-weight:800;}
 .miss-card-sel{border-radius:14px;padding:14px;cursor:pointer;transition:all .2s;
   border:3px solid transparent;text-align:center;}
 .miss-card-sel:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.1);}
@@ -101,20 +103,26 @@ body{font-family:'Quicksand',sans-serif;background:#fafaf8;min-height:100vh;over
 .miss-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
 @media(max-width:480px){.miss-grid-3{grid-template-columns:1fr;}}
 
-/* RESPOSTA MISSÃO */
+/* RESPOSTA MISSÃO - múltipla escolha */
 .resp-miss-area{background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;padding:16px;}
-.resp-miss-area p{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:10px;line-height:1.5;}
-.resp-miss-area input{width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 14px;
-  font-family:'Quicksand',sans-serif;font-size:14px;font-weight:600;outline:none;background:white;}
-.resp-miss-area input:focus{border-color:var(--amarelo-c);}
+.resp-miss-area .pergunta{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:12px;line-height:1.5;}
+.miss-ops{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:500px){.miss-ops{grid-template-columns:1fr;}}
+.miss-op{background:white;border:2px solid #e2e8f0;border-radius:12px;padding:10px 14px;
+  cursor:pointer;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:600;color:#374151;
+  text-align:left;transition:all .2s;width:100%;}
+.miss-op:hover:not(:disabled){background:#f1f5f9;border-color:#94a3b8;transform:translateX(3px);}
+.miss-op.certa{background:#d1fae5;border-color:#10b981;color:#065f46;cursor:default;}
+.miss-op.errada{background:#fee2e2;border-color:#f87171;color:#991b1b;cursor:default;}
 
 /* QUESTÕES */
 .questao-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;
-  width:100%;max-width:560px;margin-bottom:20px;border-top:5px solid var(--amarelo-c);animation:fadeIn .4s ease;}
+  width:100%;max-width:900px;margin-bottom:20px;border-top:5px solid var(--amarelo-c);animation:fadeIn .4s ease;}
 .questao-num{font-family:'Baloo 2',cursive;font-size:12px;font-weight:700;color:var(--amarelo);
   text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
 .questao-texto{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:16px;line-height:1.5;}
-.ops{display:flex;flex-direction:column;gap:8px;}
+.ops{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:500px){.ops{grid-template-columns:1fr;}}
 .op{background:var(--amarelo-bg);border:2px solid #fde68a;border-radius:12px;padding:11px 14px;
   cursor:pointer;font-family:'Quicksand',sans-serif;font-size:13px;font-weight:600;color:#78350f;
   text-align:left;transition:all .2s;}
@@ -148,7 +156,7 @@ body{font-family:'Quicksand',sans-serif;background:#fafaf8;min-height:100vh;over
 .btn-branco{background:white;color:var(--amarelo);}
 .btn-cinza{background:#94a3b8;color:white;}
 .btn-sm{padding:8px 18px;font-size:13px;}
-.nav-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px;width:100%;max-width:560px;}
+.nav-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px;width:100%;max-width:900px;}
 
 /* INTRO */
 .intro-card{background:linear-gradient(135deg,#b45309,#f59e0b);color:white;border-radius:28px;
@@ -220,9 +228,9 @@ footer{text-align:center;color:#cbd5e1;font-size:11px;margin-top:32px;padding-bo
       <p>📋 <strong>Siga estes passos:</strong></p>
       <div class="miss-passos">
         <div class="miss-passo"><div class="passo-num">1</div><div>Selecione <strong>"Fantasia"</strong> no filtro de Gênero abaixo e veja quais livros aparecem.</div></div>
-        <div class="miss-passo"><div class="passo-num">2</div><div>Conte quantos livros de Fantasia existem no banco.</div></div>
-        <div class="miss-passo"><div class="passo-num">3</div><div>Agora limpe o filtro e use o campo <strong>"Buscar título"</strong> para procurar <em>"Harry"</em>.</div></div>
-        <div class="miss-passo"><div class="passo-num">4</div><div>Pense: qual campo o computador verificou para filtrar por Fantasia?</div></div>
+        <div class="miss-passo"><div class="passo-num">2</div><div>Conte quantos livros de Fantasia existem no banco de dados.</div></div>
+        <div class="miss-passo"><div class="passo-num">3</div><div>Pense: qual campo o computador verificou para filtrar por Fantasia?</div></div>
+		<div class="miss-passo"><div class="passo-num">4</div><div>Limpe o filtro e use <strong>"Buscar título"</strong> para procurar <em>"Harry"</em>.</div></div>
       </div>
     </div>
 
@@ -246,9 +254,13 @@ footer{text-align:center;color:#cbd5e1;font-size:11px;margin-top:32px;padding-bo
     </div>
 
     <div class="resp-miss-area" style="margin-top:16px;" id="area-m1">
-      <p>❓ Ao filtrar por Gênero = Fantasia, qual campo o computador verificou em cada registro?</p>
-      <input id="resp-m1" placeholder="Sua resposta..." id="resp-m1">
-      <button class="btn btn-azul btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="verificarMissao(1)">✅ Confirmar resposta (+5 pts)</button>
+      <div class="pergunta">❓ Ao filtrar a palavras "Fantasia", qual campo o computador verificou esse registro?</div>
+      <div class="miss-ops" id="miss-ops-1">
+        <button class="miss-op" onclick="respMissao(this,1,false)">A) O campo "Título"</button>
+        <button class="miss-op" onclick="respMissao(this,1,true)">B) O campo "Gênero"</button>
+        <button class="miss-op" onclick="respMissao(this,1,false)">C) O campo "Páginas"</button>
+        <button class="miss-op" onclick="respMissao(this,1,false)">D) O campo "Autor"</button>
+      </div>
       <div class="feedback" id="fb-m1"></div>
     </div>
   </div>
@@ -275,8 +287,8 @@ footer{text-align:center;color:#cbd5e1;font-size:11px;margin-top:32px;padding-bo
       <div class="miss-passos">
         <div class="miss-passo"><div class="passo-num">1</div><div>Encontre <strong>"Capitão Cueca"</strong> na tabela abaixo.</div></div>
         <div class="miss-passo"><div class="passo-num">2</div><div>Clique no botão <strong>✏️</strong> ao lado desse livro.</div></div>
-        <div class="miss-passo"><div class="passo-num">3</div><div>No painel que vai abrir, mude a <strong>nota de 3 para 5 estrelas</strong>.</div></div>
-        <div class="miss-passo"><div class="passo-num">4</div><div>Clique em <strong>Salvar</strong> e observe o que mudou na tabela.</div></div>
+        <div class="miss-passo"><div class="passo-num">3</div><div>Embaixo no painel que abrir, mude a <strong>nota de 3 para 5 estrelas</strong>.</div></div>
+        <div class="miss-passo"><div class="passo-num">4</div><div>Clique em <strong>Salvar</strong> e observe o que mudou na tabela dos livros.</div></div>
       </div>
     </div>
 
@@ -309,9 +321,13 @@ footer{text-align:center;color:#cbd5e1;font-size:11px;margin-top:32px;padding-bo
     </div>
 
     <div class="resp-miss-area" style="margin-top:16px;">
-      <p>❓ Ao editar só a nota, o que aconteceu com o Título e o Autor do livro?</p>
-      <input id="resp-m2" placeholder="Sua resposta...">
-      <button class="btn btn-amarelo btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="verificarMissao(2)">✅ Confirmar resposta (+5 pts)</button>
+      <div class="pergunta">❓ Ao editar só a nota, o que aconteceu com o Título e o Autor do livro?</div>
+      <div class="miss-ops" id="miss-ops-2">
+        <button class="miss-op" onclick="respMissao(this,2,false)">A) Foram apagados junto com a nota antiga</button>
+        <button class="miss-op" onclick="respMissao(this,2,true)">B) Ficaram iguais — só a nota mudou</button>
+        <button class="miss-op" onclick="respMissao(this,2,false)">C) O livro inteiro foi deletado do banco</button>
+        <button class="miss-op" onclick="respMissao(this,2,false)">D) Foram copiados para um novo registro</button>
+      </div>
       <div class="feedback" id="fb-m2"></div>
     </div>
   </div>
@@ -357,9 +373,13 @@ footer{text-align:center;color:#cbd5e1;font-size:11px;margin-top:32px;padding-bo
     </div>
 
     <div class="resp-miss-area" style="margin-top:16px;">
-      <p>❓ Para encontrar o livro com <strong>maior nota</strong>, qual ordenação devemos usar?</p>
-      <input id="resp-m3" placeholder="Sua resposta...">
-      <button class="btn btn-verde btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="verificarMissao(3)">✅ Confirmar resposta (+5 pts)</button>
+      <div class="pergunta">❓ Para encontrar o livro com <strong>maior nota</strong>, qual ordenação devemos usar?</div>
+      <div class="miss-ops" id="miss-ops-3">
+        <button class="miss-op" onclick="respMissao(this,3,false)">A) Título A→Z</button>
+        <button class="miss-op" onclick="respMissao(this,3,true)">B) Nota ↓ (maior primeiro)</button>
+        <button class="miss-op" onclick="respMissao(this,3,false)">C) Páginas ↑</button>
+        <button class="miss-op" onclick="respMissao(this,3,false)">D) Autor A→Z</button>
+      </div>
       <div class="feedback" id="fb-m3"></div>
     </div>
   </div>
@@ -612,32 +632,35 @@ function ordenarM3(ord) {
   renderTb('m3', '', '', ord);
 }
 
-/* ─── VERIFICAR MISSÃO ─── */
-const missConfig = {
-  1: { correta: 'gênero', hint: 'Pense: você usou o filtro de _____ para buscar.' },
-  2: { correta: 'iguais',  hint: 'Editar um campo não apaga os outros — eles ficam _____.' },
-  3: { correta: 'nota',    hint: 'Para ver os mais bem avaliados primeiro, ordene por _____.' },
-};
-function verificarMissao(n) {
+/* ─── RESPOSTA MISSÃO (múltipla escolha) ─── */
+function respMissao(btn, n, certa) {
   if (missFeitas.has(n)) return;
-  const val = document.getElementById('resp-m' + n)?.value.trim().toLowerCase() || '';
-  const cfg = missConfig[n];
+  const ops = document.getElementById('miss-ops-' + n);
+  ops.querySelectorAll('.miss-op').forEach(b => b.disabled = true);
+  btn.classList.add(certa ? 'certa' : 'errada');
+  if (!certa) ops.querySelectorAll('.miss-op').forEach(b => { if (!b.classList.contains('errada')) b.classList.add('certa'); });
   const fb = document.getElementById('fb-m' + n);
-  if (val.includes(cfg.correta) || val.length > 3) {
+  if (certa) {
     fb.className = 'feedback ok';
-    fb.textContent = `✅ Correto! +5 pontos!`;
-    document.getElementById('resp-m' + n).disabled = true;
+    fb.textContent = '✅ Correto! +5 pontos!';
     missFeitas.add(n);
     pts.missoes += 5;
     atualizarHUD(5);
-    // habilitar próximo
     const nextBtns = { 1: 'btn-m1-next', 2: 'btn-m2-next', 3: 'btn-m3-next' };
     const msgIds   = { 1: 'msg-m1', 2: 'msg-m2', 3: 'msg-m3' };
     document.getElementById(nextBtns[n]).disabled = false;
     document.getElementById(msgIds[n]).style.opacity = '0';
   } else {
     fb.className = 'feedback nao';
-    fb.textContent = `❌ Tente novamente! Dica: ${cfg.hint}`;
+    fb.textContent = '❌ Incorreto! A resposta certa está marcada em verde.';
+    // ainda libera avançar após errar (com 0 pts)
+    missFeitas.add(n);
+    const nextBtns = { 1: 'btn-m1-next', 2: 'btn-m2-next', 3: 'btn-m3-next' };
+    const msgIds   = { 1: 'msg-m1', 2: 'msg-m2', 3: 'msg-m3' };
+    setTimeout(() => {
+      document.getElementById(nextBtns[n]).disabled = false;
+      document.getElementById(msgIds[n]).style.opacity = '0';
+    }, 1200);
   }
 }
 
